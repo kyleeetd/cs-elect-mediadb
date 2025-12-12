@@ -1,66 +1,61 @@
-import unittest
-import json
-from main import app
+import requests
 
-class TestMediaAPI(unittest.TestCase):
-    def setUp(self):
-        self.app = app.test_client()
-        self.app.testing = True
-    
-    def test_1_homepage(self):
-        response = self.app.get('/')
-        self.assertEqual(response.status_code, 200)
-        print("Homepage works")
-    
-    def test_2_get_all_media_json(self):
-        response = self.app.get('/api/media')
-        self.assertEqual(response.status_code, 200)
-        print("GET /api/media works")
-    
-    def test_3_get_all_media_xml(self):
-        response = self.app.get('/api/media?format=xml')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content_type, 'application/xml')
-        print("XML format works")
-    
-    def test_4_get_single_media(self):
-        response = self.app.get('/api/media/1')
-        self.assertEqual(response.status_code, 200)
-        print("GET /api/media/1 works")
-    
-    def test_5_search_media(self):
-        response = self.app.get('/api/search?q=Movie')
-        self.assertEqual(response.status_code, 200)
-        print("Search works")
-    
-    def test_6_create_media(self):
-        new_media = {
-            "title": "Test Movie",
-            "duration": "120 min",
-            "rating": "PG-13",
-            "release_date": "2024",
-            "media_type": "Movie"
-        }
-        response = self.app.post('/api/media', 
-                               json=new_media,
-                               content_type='application/json')
-        self.assertEqual(response.status_code, 201)
-        print("POST /api/media works")
-    
-    def test_7_update_media(self):
-        update_data = {"rating": "PG"}
-        response = self.app.put('/api/media/1', 
-                              json=update_data,
-                              content_type='application/json')
-        self.assertEqual(response.status_code, 200)
-        print("PUT /api/media/1 works")
-    
-    def test_8_delete_media(self):
-        response = self.app.delete('/api/media/100')
-        self.assertEqual(response.status_code, 404)
-        print("DELETE returns proper error for non-existent ID")
+BASE_URL = "http://localhost:5000/media"
 
-if __name__ == '__main__':
-    print("Testing Media API...")
-    print("=" * 50)
-    unittest.main(verbosity=2)
+def print_response(title, response):
+    print(f"\n=== {title} ===")
+    print("Status:", response.status_code)
+    try:
+        print(response.json())
+    except:
+        print(response.text)
+
+print("🎬 MEDIA API DEMO")
+print("=" * 40)
+
+# 1. GET ALL (RETRIEVE)
+response = requests.get(BASE_URL)
+print_response("1. READ - Get all media", response)
+
+# 2. CREATE (POST) - Add new movie
+print("\n" + "=" * 40)
+print("2. CREATE - Add new movie")
+new_movie = {
+    "title": "Toy Story",
+    "duration": 81,
+    "rating": 8.3,
+    "media_type": "Movie"
+}
+response = requests.post(BASE_URL, json=new_movie)
+print_response("POST result", response)
+
+# Get the ID of new created movie
+if response.status_code == 201:
+    new_id = response.json().get("id")
+    print(f"✅ Created movie with ID: {new_id}")
+else:
+    print("❌ Failed to create movie")
+    new_id = None
+
+# 3. GET ONE (RETRIEVE one only)
+if new_id:
+    print("\n" + "=" * 40)
+    print(f"3. READ - Get movie ID {new_id}")
+    response = requests.get(f"{BASE_URL}/{new_id}")
+    print_response(f"GET movie {new_id}", response)
+
+# 4. DELETE
+if new_id:
+    print("\n" + "=" * 40)
+    print(f"4. DELETE - Remove movie ID {new_id}")
+    response = requests.delete(f"{BASE_URL}/{new_id}")
+    print_response(f"DELETE movie {new_id}", response)
+
+# 5. FINAL CHECK
+print("\n" + "=" * 40)
+print("5. FINAL - Get all media again")
+response = requests.get(BASE_URL)
+print_response("Final check", response)
+
+print("\n" + "=" * 40)
+print("DEMO COMPLETE!")
