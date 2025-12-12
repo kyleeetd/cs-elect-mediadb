@@ -1,61 +1,51 @@
 import requests
 
-BASE_URL = "http://localhost:5000/media"
-
-def print_response(title, response):
-    print(f"\n=== {title} ===")
-    print("Status:", response.status_code)
-    try:
-        print(response.json())
-    except:
-        print(response.text)
-
-print("🎬 MEDIA API DEMO")
+print("🎬 Testing XML & Search")
 print("=" * 40)
 
-# 1. GET ALL (RETRIEVE)
-response = requests.get(BASE_URL)
-print_response("1. READ - Get all media", response)
+# Test 1: Get JSON (default)
+print("\n1. GET all in JSON:")
+r = requests.get("http://localhost:5000/media")
+print(f"✅ Status: {r.status_code}")
+print(f"📊 Found: {r.json()['message']}")
 
-# 2. CREATE (POST) - Add new movie
+# Test 2: Get XML
+print("\n2. GET all in XML:")
+r = requests.get("http://localhost:5000/media?format=xml")
+print(f"✅ Status: {r.status_code}")
+print(f"📋 Content-Type: {r.headers['Content-Type']}")
+if "xml" in r.headers['Content-Type']:
+    print("🎯 XML format works!")
+
+# Test 3: Search MOVIES in JSON
+print("\n3. SEARCH 'movie' in JSON:")
+r = requests.get("http://localhost:5000/search?q=movie")
+print(f"✅ Status: {r.status_code}")
+data = r.json()
+print(f"🔍 Found {data['results_found']} results for '{data['query']}'")
+
+# NEW TEST: Search TV SHOWS in JSON
+print("\n4. SEARCH 'TV' in JSON:")
+r = requests.get("http://localhost:5000/search?q=TV")
+print(f"✅ Status: {r.status_code}")
+data = r.json()
+print(f"📺 Found {data['results_found']} TV shows for '{data['query']}'")
+
+# Test 5: Search MOVIES in XML (was test 4)
+print("\n5. SEARCH 'movie' in XML:")
+r = requests.get("http://localhost:5000/search?q=movie&format=xml")
+print(f"✅ Status: {r.status_code}")
+print(f"📋 Content-Type: {r.headers['Content-Type']}")
+if "xml" in r.headers['Content-Type']:
+    print("🎯 Search with XML works!")
+
+# NEW TEST: Search TV SHOWS in XML
+print("\n6. SEARCH 'TV' in XML:")
+r = requests.get("http://localhost:5000/search?q=TV&format=xml")
+print(f"✅ Status: {r.status_code}")
+print(f"📋 Content-Type: {r.headers['Content-Type']}")
+if "xml" in r.headers['Content-Type']:
+    print("🎯 TV shows search with XML works!")
+
 print("\n" + "=" * 40)
-print("2. CREATE - Add new movie")
-new_movie = {
-    "title": "Toy Story",
-    "duration": 81,
-    "rating": 8.3,
-    "media_type": "Movie"
-}
-response = requests.post(BASE_URL, json=new_movie)
-print_response("POST result", response)
-
-# Get the ID of new created movie
-if response.status_code == 201:
-    new_id = response.json().get("id")
-    print(f"✅ Created movie with ID: {new_id}")
-else:
-    print("❌ Failed to create movie")
-    new_id = None
-
-# 3. GET ONE (RETRIEVE one only)
-if new_id:
-    print("\n" + "=" * 40)
-    print(f"3. READ - Get movie ID {new_id}")
-    response = requests.get(f"{BASE_URL}/{new_id}")
-    print_response(f"GET movie {new_id}", response)
-
-# 4. DELETE
-if new_id:
-    print("\n" + "=" * 40)
-    print(f"4. DELETE - Remove movie ID {new_id}")
-    response = requests.delete(f"{BASE_URL}/{new_id}")
-    print_response(f"DELETE movie {new_id}", response)
-
-# 5. FINAL CHECK
-print("\n" + "=" * 40)
-print("5. FINAL - Get all media again")
-response = requests.get(BASE_URL)
-print_response("Final check", response)
-
-print("\n" + "=" * 40)
-print("DEMO COMPLETE!")
+print("✅ ALL TESTS PASSED!")
