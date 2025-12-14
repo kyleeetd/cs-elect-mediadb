@@ -1,11 +1,11 @@
 from flask import Flask, jsonify, request, make_response
 import mysql.connector
 import json
-import xml.etree.ElementTree as ET  # ADD THIS
+import xml.etree.ElementTree as ET 
 
 app = Flask(__name__)
 
-# Simple database
+# connecting database
 def get_db():
     return mysql.connector.connect(
         host="127.0.0.1",
@@ -14,7 +14,7 @@ def get_db():
         database="media_db"
     )
 
-# ADD THIS FUNCTION FOR XML/JSON FORMATTING
+# FOR XML/JSON FORMATTING
 def format_response(data, format_type='json'):
     """Return XML or JSON response"""
     if format_type == 'xml':
@@ -53,7 +53,6 @@ def get_all():
     media = cursor.fetchall()
     db.close()
     
-    # GET FORMAT PARAMETER
     format_type = request.args.get('format', 'json')
     
     response_data = {
@@ -80,7 +79,6 @@ def get_one(id):
         return format_response(response_data, format_type)
     else:
         response_data = {"error": "Not found"}
-        # Handle error in XML format
         if format_type == 'xml':
             root = ET.Element('error')
             msg = ET.SubElement(root, 'message')
@@ -92,7 +90,7 @@ def get_one(id):
         else:
             return jsonify(response_data), 404
 
-# 3. CREATE
+# 3. CREATE/PoOST
 @app.route('/media', methods=['POST'])
 def create():
     data = request.json
@@ -133,17 +131,14 @@ def delete(id):
     else:
         return jsonify({"error": "Not found"}), 404
 
-# 5. SEARCH - ADD THIS NEW ROUTE
+# 5. SEARCH
 @app.route('/search', methods=['GET'])
 def search():
     """Search media by title or type"""
-    # Get search query
     query = request.args.get('q', '')
-    # Get format (json or xml)
     format_type = request.args.get('format', 'json')
     
     if not query:
-        # Empty search query error
         response_data = {"error": "Please provide search query (?q=...)"}
         if format_type == 'xml':
             root = ET.Element('error')
@@ -159,7 +154,6 @@ def search():
     db = get_db()
     cursor = db.cursor(dictionary=True)
     
-    # Search in title and media_type
     cursor.execute("""
         SELECT * FROM media_library 
         WHERE title LIKE %s OR media_type LIKE %s
